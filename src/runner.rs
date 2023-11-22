@@ -1,10 +1,7 @@
-mod jqunit {
-    use crate::jq::jq::{
-        jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv,
-        jv_array, jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump_string,
-        jv_get_kind, jv_kind_JV_KIND_NULL, jv_null, jv_string, jv_string_value,
-    };
-    use crate::jq::jv::jv_kind_JV_KIND_ARRAY;
+pub mod runner {
+    use std::error::Error;
+    use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv, jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY, jv_null, jv_string, jv_string_value};
+
     use std::ffi::{CStr, CString};
 
     pub struct Runner {
@@ -39,18 +36,18 @@ mod jqunit {
             }
         }
 
-        pub fn execute_code_with_no_input(&self, code: &str) -> Option<String> {
+        pub fn execute_code_with_no_input(&self, code: &str) -> Result<String, String> {
             let code_as_cstring = CString::new(code).expect("failure");
 
             unsafe {
                 jq_compile(self.state, code_as_cstring.as_ptr());
                 jq_start(self.state, jv_null(), 0);
 
-                Some(self.state)
+                Ok(self.state)
                     .map(|value| jq_next(value))
                     .map(|value| jv_string_value(value))
                     .map(|value| CStr::from_ptr(value))
-                    .and_then(|cstr| cstr.to_str().ok())
+                    .map(|cstr| cstr.to_str().ok().expect(""))
                     .map(String::from)
             }
         }
@@ -72,7 +69,6 @@ mod jqunit {
                             jv_to_string(jv_array_get(jv_copy(defined_functions), i));
 
                         function.truncate(function.find("/").expect("foo"));
-
                         functions.push(function)
                     }
 
@@ -87,8 +83,8 @@ mod jqunit {
 
 #[cfg(test)]
 mod test {
-    use crate::runner::jqunit::Runner;
     use std::fs;
+    use crate::runner::runner::Runner;
 
     fn fixtures() -> String {
         fs::canonicalize("./fixtures")
@@ -103,7 +99,7 @@ mod test {
     fn should_execute_code_with_no_input() {
         assert_eq!(
             Runner::start().execute_code_with_no_input("\"hello\""),
-            Some(String::from("hello"))
+            Ok(String::from("hello"))
         );
     }
 
@@ -115,7 +111,7 @@ mod test {
         assert_eq!(
             runner
                 .execute_code_with_no_input("import \"simple_function\" as s; s::simple_function"),
-            Some(String::from("2"))
+            Ok(String::from("2"))
         );
     }
 
