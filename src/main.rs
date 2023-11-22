@@ -1,10 +1,11 @@
 extern crate libc;
 
 mod jq;
+mod runner;
 
 use std::ffi::CStr;
 use std::ffi::CString;
-use std::os::raw::c_char;
+
 use crate::jq::jq::{jq_compile, jq_init, jq_next, jq_start, jq_teardown, jv_string, jv_string_value};
 
 fn main() {
