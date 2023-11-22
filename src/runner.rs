@@ -5,15 +5,17 @@ mod jqunit {
         jv_get_kind, jv_kind_JV_KIND_NULL, jv_null, jv_string, jv_string_value,
     };
     use std::ffi::{CStr, CString};
+    use crate::jq::jv::jv_kind_JV_KIND_ARRAY;
 
     pub struct Runner {
         state: *mut jq_state,
     }
 
+
     pub fn jv_to_string(jv: jv) -> String {
         unsafe {
             String::from(
-                CStr::from_ptr(jv_string_value(jv_dump_string(jv, 0)))
+                CStr::from_ptr(jv_string_value(jv))
                     .to_str()
                     .expect("a"),
             )
@@ -59,6 +61,33 @@ mod jqunit {
                     .map(String::from)
             }
         }
+
+        pub fn get_functions_for_module(&self, module: &str) -> Vec<String> {
+            let code_as_cstring = CString::new("modulemeta | .defs").expect("failure");
+
+            unsafe {
+                jq_compile(self.state, code_as_cstring.as_ptr());
+                jq_start(self.state, jv_from_string(module), 0);
+
+                let defined_functions = jq_next(self.state);
+
+                if jv_get_kind(defined_functions) == jv_kind_JV_KIND_ARRAY {
+                    let mut functions = vec![];
+
+                    for i in 0..jv_array_length(jv_copy(defined_functions)) {
+                        let mut function = jv_to_string(jv_array_get(jv_copy(defined_functions), i));
+
+                        function.truncate(function.find("/").expect("foo"));
+
+                        functions.push(function)
+                    }
+
+                    functions
+                } else {
+                    vec![]
+                }
+            }
+        }
     }
 }
 
@@ -87,8 +116,25 @@ mod test {
         );
 
         assert_eq!(
-            runner.execute_code_with_no_input("include \"simple_function\"; simple_function"),
+            runner.execute_code_with_no_input("import \"simple_function\" as s; s::simple_function"),
             Some(String::from("2"))
+        );
+    }
+
+    #[test]
+    fn should_load_list_of_functions_from_module() {
+        let runner = Runner::start();
+        runner.add_library(
+            fs::canonicalize("./fixtures")
+                .expect("path exists")
+                .as_path()
+                .to_str()
+                .expect("path"),
+        );
+
+        assert_eq!(
+            runner.get_functions_for_module("simple_function"),
+            vec!["simple_function", "other_simple_function"]
         );
     }
 }
