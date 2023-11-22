@@ -116,11 +116,11 @@ pub mod runner {
     }
 
     #[derive(Debug,PartialEq)]
-    struct TestResult {
-        module: String,
-        name: String,
-        pass: bool,
-        output: String
+    pub struct TestResult {
+        pub module: String,
+        pub name: String,
+        pub pass: bool,
+        pub output: String
     }
 
     #[test]
