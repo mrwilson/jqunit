@@ -94,6 +94,15 @@ pub mod runner {
                 }
             }
         }
+
+        pub fn execute_test(&self, module: &str, test_name: &str) -> TestResult {
+            let code = format!("include \"{}\"; {}", module, test_name);
+
+            match self.execute_code_with_no_input(&code) {
+                Ok(output) => TestResult { module: String::from(module), name: String::from(test_name), pass: true, output },
+                Err(output) => TestResult { module: String::from(module), name: String::from(test_name), pass: false, output },
+            }
+        }
     }
 
     fn fixtures() -> String {
@@ -104,6 +113,14 @@ pub mod runner {
             .to_str()
             .map(String::from)
             .expect("as a string")
+    }
+
+    #[derive(Debug,PartialEq)]
+    struct TestResult {
+        module: String,
+        name: String,
+        pass: bool,
+        output: String
     }
 
     #[test]
@@ -145,6 +162,22 @@ pub mod runner {
         assert_eq!(
             runner.get_functions_for_module("simple_function"),
             vec!["simple_function", "other_simple_function"]
+        );
+    }
+
+    #[test]
+    fn should_run_test() {
+        let runner = Runner::start();
+        runner.add_library(&fixtures());
+
+        assert_eq!(
+            runner.execute_test("simple_function", "simple_function"),
+            TestResult {
+                module: String::from("simple_function"),
+                name: String::from("simple_function"),
+                pass: true,
+                output: String::from("2")
+            }
         );
     }
 }
