@@ -1,4 +1,7 @@
-use crate::jq::jq::{jv, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_INVALID, jv_kind_JV_KIND_STRING, jv_string, jv_string_value};
+use crate::jq::jq::{
+    jv, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY,
+    jv_kind_JV_KIND_INVALID, jv_kind_JV_KIND_STRING, jv_string, jv_string_value,
+};
 use std::ffi::{c_int, CStr, CString};
 
 impl IntoIterator for jv {
@@ -69,7 +72,6 @@ pub fn remove_arity(name: String) -> String {
     function_name.truncate(function_name.find("/").expect("foo"));
     function_name
 }
-
 
 pub fn jv_to_result(value: jv) -> Result<jv, jv> {
     if unsafe { jv_get_kind(value) } == jv_kind_JV_KIND_INVALID {

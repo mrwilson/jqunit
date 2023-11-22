@@ -1,11 +1,10 @@
-use std::path::PathBuf;
 use clap::Parser;
+use std::path::PathBuf;
 
 use crate::runner::runner::Runner;
 
 mod jq;
 mod runner;
-
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -22,7 +21,8 @@ fn main() {
 
     let runner = Runner::start();
 
-    args.libraries.into_iter()
+    args.libraries
+        .into_iter()
         .map(|path| path.canonicalize().expect("should have a valid path"))
         .for_each(|library| runner.add_library(library));
 
@@ -33,4 +33,3 @@ fn main() {
         .map(|function| runner.execute_test(&args.module, &function))
         .for_each(|test_result| println!("{}", test_result));
 }
-

@@ -1,5 +1,8 @@
 pub mod runner {
-    use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv_array_append, jv_invalid_get_msg, jv_null};
+    use crate::jq::jq::{
+        jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state,
+        jv_array_append, jv_invalid_get_msg, jv_null,
+    };
     use crate::jq::utils::{jv_from_string, jv_to_result, jv_to_string, remove_arity};
     use std::ffi::CString;
     use std::fmt::{Display, Formatter};
@@ -18,7 +21,10 @@ pub mod runner {
 
         pub fn add_library(&self, path: PathBuf) {
             unsafe {
-                let libs = jv_array_append(jq_get_lib_dirs(self.state), jv_from_string(path.to_str().expect("a")));
+                let libs = jv_array_append(
+                    jq_get_lib_dirs(self.state),
+                    jv_from_string(path.to_str().expect("a")),
+                );
                 jq_set_attr(self.state, jv_from_string("JQ_LIBRARY_PATH"), libs);
             }
         }
@@ -38,7 +44,6 @@ pub mod runner {
                     .map_err(|err| jv_to_string(err))
             }
         }
-
 
         pub fn get_functions_for_module(&self, module: &str) -> Vec<String> {
             let code_as_cstring = CString::new("modulemeta | .defs").expect("failure");
@@ -86,14 +91,16 @@ pub mod runner {
     impl Display for TestResult {
         fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
             if self.pass {
-                write!(f,
+                write!(
+                    f,
                     "test {}::{} ... \x1b[32mok\x1b[0m",
                     self.module, self.name
                 )
             } else {
-                write!(f,
+                write!(
+                    f,
                     "test {}::{} ... \x1b[31mFAILED\x1b[0m\n{}",
-                       self.module, self.name, self.output
+                    self.module, self.name, self.output
                 )
             }
         }
