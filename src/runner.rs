@@ -5,7 +5,7 @@ pub mod runner {
         jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_INVALID, jv_null,
     };
     use std::ffi::CString;
-    use crate::jq::utils::{jv_from_string, jv_to_string};
+    use crate::jq::utils::{jv_from_string, jv_to_string, remove_arity};
 
     pub struct Runner {
         state: *mut jq_state,
@@ -57,11 +57,7 @@ pub mod runner {
                 jq_next(self.state)
                     .into_iter()
                     .map(|value| jv_to_string(value))
-                    .map(|name| {
-                        let mut function_name = name.clone();
-                        function_name.truncate(function_name.find("/").expect("foo"));
-                        function_name
-                    })
+                    .map(remove_arity)
                     .collect::<Vec<String>>()
             }
         }

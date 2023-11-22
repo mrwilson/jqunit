@@ -65,10 +65,16 @@ pub fn jv_to_string(jv: jv) -> String {
     }
 }
 
+pub fn remove_arity(name: String) -> String {
+    let mut function_name = name.clone();
+    function_name.truncate(function_name.find("/").expect("foo"));
+    function_name
+}
+
 #[cfg(test)]
 mod test {
     use crate::jq::jq::jv_array;
-    use crate::jq::utils::{jv_from_string, jv_to_string};
+    use crate::jq::utils::{jv_from_string, jv_to_string, remove_arity};
 
     #[test]
     fn string_values_are_reversible() {
@@ -78,5 +84,10 @@ mod test {
     #[test]
     fn non_string_values_are_serialised() {
         unsafe { assert_eq!(jv_to_string(jv_array()), "[]") }
+    }
+
+    #[test]
+    fn arities_are_removed_from_function_names() {
+       assert_eq!(remove_arity(String::from("test_function/0")), "test_function")
     }
 }
