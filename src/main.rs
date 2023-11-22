@@ -1,30 +1,49 @@
-extern crate libc;
+use std::path::PathBuf;
+use clap::Parser;
+
+use crate::runner::runner::Runner;
 
 mod jq;
 mod runner;
 
-use std::ffi::CStr;
-use std::ffi::CString;
 
-use crate::jq::jq::{
-    jq_compile, jq_init, jq_next, jq_start, jq_teardown, jv_string, jv_string_value,
-};
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Arguments {
+    #[arg(short, long, num_args = 1.., value_delimiter = ' ')]
+    libraries: Vec<PathBuf>,
+
+    #[arg(short, long)]
+    module: String,
+}
 
 fn main() {
-    unsafe {
-        let mut jq = jq_init();
+    let args = Arguments::parse();
 
-        let hello_world_string = jv_string(CString::new("Hello, world!").expect("whee").as_ptr());
+    let runner = Runner::start();
 
-        jq_compile(jq, CString::new(".").expect("whee").as_ptr());
-        jq_start(jq, hello_world_string, 0);
+    args.libraries.into_iter()
+        .map(|path| path.canonicalize().expect("should have a valid path"))
+        .for_each(|library| runner.add_library(library));
 
-        println!(
-            "{}",
-            CStr::from_ptr(jv_string_value(jq_next(jq)))
-                .to_str()
-                .expect("whee")
-        );
-        jq_teardown(&mut jq);
-    }
+    runner
+        .get_functions_for_module(&args.module)
+        .into_iter()
+        .filter(|function| function.starts_with("should_"))
+        .map(|function| runner.execute_test(&args.module, &function))
+        .map(|test_result| {
+            if test_result.pass {
+                format!(
+                    "test {}::{} ... \x1b[32mok\x1b[0m",
+                    test_result.module, test_result.name
+                )
+            } else {
+                format!(
+                    "test {}::{} ... \x1b[31mFAILED\x1b[0m\n{}",
+                    test_result.module, test_result.name, test_result.output
+                )
+            }
+        })
+        .for_each(|test_result| println!("{}", test_result));
 }
+
