@@ -2,6 +2,7 @@ pub mod runner {
     use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv_array_append, jv_invalid_get_msg, jv_null};
     use crate::jq::utils::{jv_from_string, jv_to_result, jv_to_string, remove_arity};
     use std::ffi::CString;
+    use std::path::PathBuf;
 
     pub struct Runner {
         state: *mut jq_state,
@@ -14,9 +15,9 @@ pub mod runner {
             }
         }
 
-        pub fn add_library(&self, path: &str) {
+        pub fn add_library(&self, path: PathBuf) {
             unsafe {
-                let libs = jv_array_append(jq_get_lib_dirs(self.state), jv_from_string(path));
+                let libs = jv_array_append(jq_get_lib_dirs(self.state), jv_from_string(path.to_str().expect("a")));
                 jq_set_attr(self.state, jv_from_string("JQ_LIBRARY_PATH"), libs);
             }
         }
@@ -73,16 +74,6 @@ pub mod runner {
         }
     }
 
-    fn fixtures() -> String {
-        use std::fs;
-        fs::canonicalize("./fixtures")
-            .expect("path exists")
-            .as_path()
-            .to_str()
-            .map(String::from)
-            .expect("as a string")
-    }
-
     #[derive(Debug, PartialEq)]
     pub struct TestResult {
         pub module: String,
@@ -102,7 +93,7 @@ pub mod runner {
     #[test]
     fn should_load_library_and_execute_code() {
         let runner = Runner::start();
-        runner.add_library(&fixtures());
+        runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
         assert_eq!(
             runner
@@ -114,7 +105,7 @@ pub mod runner {
     #[test]
     fn should_return_error_if_exits_with_error() {
         let runner = Runner::start();
-        runner.add_library(&fixtures());
+        runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
         assert_eq!(
             runner.execute_code_with_no_input("error(\"Failed to run\")"),
@@ -125,7 +116,7 @@ pub mod runner {
     #[test]
     fn should_load_list_of_functions_from_module() {
         let runner = Runner::start();
-        runner.add_library(&fixtures());
+        runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
         assert_eq!(
             runner.get_functions_for_module("simple_function"),
@@ -136,7 +127,7 @@ pub mod runner {
     #[test]
     fn should_run_test() {
         let runner = Runner::start();
-        runner.add_library(&fixtures());
+        runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
         assert_eq!(
             runner.execute_test("simple_function", "simple_function"),
@@ -152,7 +143,7 @@ pub mod runner {
     #[test]
     fn should_run_failing_test() {
         let runner = Runner::start();
-        runner.add_library(&fixtures());
+        runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
         assert_eq!(
             runner.execute_test("bad_module", "function_with_error"),
