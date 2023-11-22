@@ -7,6 +7,7 @@ pub mod runner {
     use std::ffi::CString;
     use std::fmt::{Display, Formatter};
     use std::path::PathBuf;
+    use std::time::Instant;
 
     pub struct Runner {
         state: *mut jq_state,
@@ -63,18 +64,21 @@ pub mod runner {
         pub fn execute_test(&self, module: &str, test_name: &str) -> TestResult {
             let code = format!("include \"{}\"; {}", module, test_name);
 
+            let start = Instant::now();
             match self.execute_code_with_no_input(&code) {
                 Ok(output) => TestResult {
                     module: String::from(module),
                     name: String::from(test_name),
                     pass: true,
                     output,
+                    duration: start.elapsed().as_millis()
                 },
                 Err(output) => TestResult {
                     module: String::from(module),
                     name: String::from(test_name),
                     pass: false,
                     output,
+                    duration: start.elapsed().as_millis()
                 },
             }
         }
@@ -86,6 +90,7 @@ pub mod runner {
         pub name: String,
         pub pass: bool,
         pub output: String,
+        pub duration: u128,
     }
 
     impl Display for TestResult {
@@ -93,14 +98,14 @@ pub mod runner {
             if self.pass {
                 write!(
                     f,
-                    "test {}::{} ... \x1b[32mok\x1b[0m",
-                    self.module, self.name
+                    "test {}::{} ... \x1b[32mok\x1b[0m ({}ms)",
+                    self.module, self.name, self.duration
                 )
             } else {
                 write!(
                     f,
-                    "test {}::{} ... \x1b[31mFAILED\x1b[0m\n{}",
-                    self.module, self.name, self.output
+                    "test {}::{} ... \x1b[31mFAILED\x1b[0m ({}ms)\n{}",
+                    self.module, self.name, self.duration, self.output
                 )
             }
         }
@@ -153,15 +158,15 @@ pub mod runner {
         let runner = Runner::start();
         runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
-        assert_eq!(
-            runner.execute_test("simple_function", "simple_function"),
-            TestResult {
-                module: String::from("simple_function"),
-                name: String::from("simple_function"),
-                pass: true,
-                output: String::from("2")
-            }
-        );
+
+        let result = runner.execute_test("simple_function", "simple_function");
+
+        assert_eq!(result.module, String::from("simple_function"));
+        assert_eq!(result.name, String::from("simple_function"));
+        assert_eq!(result.output, String::from("2"));
+
+        assert!(result.pass);
+        assert!(result.duration > 0)
     }
 
     #[test]
@@ -169,14 +174,13 @@ pub mod runner {
         let runner = Runner::start();
         runner.add_library(std::fs::canonicalize("./fixtures").expect("loaded fixtures"));
 
-        assert_eq!(
-            runner.execute_test("bad_module", "function_with_error"),
-            TestResult {
-                module: String::from("bad_module"),
-                name: String::from("function_with_error"),
-                pass: false,
-                output: String::from("This is a bad function")
-            }
-        );
+        let result = runner.execute_test("bad_module", "function_with_error");
+
+        assert_eq!(result.module, String::from("bad_module"));
+        assert_eq!(result.name, String::from("function_with_error"));
+        assert_eq!(result.output, String::from("This is a bad function"));
+
+        assert!(!result.pass);
+        assert!(result.duration > 0)
     }
 }
