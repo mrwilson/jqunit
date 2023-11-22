@@ -1,9 +1,6 @@
 pub mod runner {
-    use crate::jq::jq::{
-        jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state,
-        jv_array_append, jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_INVALID, jv_null,
-    };
-    use crate::jq::utils::{jv_from_string, jv_to_string, remove_arity};
+    use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv_array_append, jv_invalid_get_msg, jv_null};
+    use crate::jq::utils::{jv_from_string, jv_to_result, jv_to_string, remove_arity};
     use std::ffi::CString;
 
     pub struct Runner {
@@ -33,18 +30,13 @@ pub mod runner {
 
                 Ok(self.state)
                     .map(|value| jq_next(value))
-                    .and_then(|value| {
-                        if jv_get_kind(value) == jv_kind_JV_KIND_INVALID {
-                            Err(value)
-                        } else {
-                            Ok(value)
-                        }
-                    })
+                    .and_then(jv_to_result)
                     .map(|value| jv_to_string(value))
                     .map_err(|err| jv_invalid_get_msg(err))
                     .map_err(|err| jv_to_string(err))
             }
         }
+
 
         pub fn get_functions_for_module(&self, module: &str) -> Vec<String> {
             let code_as_cstring = CString::new("modulemeta | .defs").expect("failure");
