@@ -47,7 +47,7 @@ pub mod runner {
             }
         }
 
-        pub fn execute_code_with_no_input(&self, code: &str) -> Result<String, String> {
+        fn execute_code_with_no_input(&self, code: &str) -> Result<String, String> {
             let code_as_cstring = CString::new(code).expect("failure");
 
             unsafe {
@@ -95,14 +95,9 @@ pub mod runner {
             }
         }
     }
-}
-
-#[cfg(test)]
-mod test {
-    use std::fs;
-    use crate::runner::runner::Runner;
 
     fn fixtures() -> String {
+        use std::fs;
         fs::canonicalize("./fixtures")
             .expect("path exists")
             .as_path()
@@ -137,8 +132,7 @@ mod test {
         runner.add_library(&fixtures());
 
         assert_eq!(
-            runner
-                .execute_code_with_no_input("error(\"Failed to run\")"),
+            runner.execute_code_with_no_input("error(\"Failed to run\")"),
             Err(String::from("Failed to run"))
         );
     }
