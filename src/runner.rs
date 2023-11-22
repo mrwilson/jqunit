@@ -1,8 +1,8 @@
 pub mod runner {
     use crate::jq::jq::{
         jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state,
-        jv_array_append, jv_array_get, jv_array_length, jv_copy,
-        jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_INVALID, jv_null,
+        jv_array_append,
+        jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_INVALID, jv_null,
     };
     use std::ffi::CString;
     use crate::jq::utils::{jv_from_string, jv_to_string};
@@ -54,22 +54,15 @@ pub mod runner {
                 jq_compile(self.state, code_as_cstring.as_ptr());
                 jq_start(self.state, jv_from_string(module), 0);
 
-                let defined_functions = jq_next(self.state);
-
-                if jv_get_kind(defined_functions) == jv_kind_JV_KIND_ARRAY {
-                    (0..jv_array_length(jv_copy(defined_functions)))
-                        .into_iter()
-                        .map(|index| jv_array_get(jv_copy(defined_functions), index))
-                        .map(|value| jv_to_string(value))
-                        .map(|name| {
-                            let mut function_name = name.clone();
-                            function_name.truncate(function_name.find("/").expect("foo"));
-                            function_name
-                        })
-                        .collect::<Vec<String>>()
-                } else {
-                    vec![]
-                }
+                jq_next(self.state)
+                    .into_iter()
+                    .map(|value| jv_to_string(value))
+                    .map(|name| {
+                        let mut function_name = name.clone();
+                        function_name.truncate(function_name.find("/").expect("foo"));
+                        function_name
+                    })
+                    .collect::<Vec<String>>()
             }
         }
 

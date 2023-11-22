@@ -1,5 +1,47 @@
-use std::ffi::{CStr, CString};
-use crate::jq::jq::{jv, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_STRING, jv_string, jv_string_value};
+use std::ffi::{c_int, CStr, CString};
+use crate::jq::jq::{jv, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_STRING, jv_string, jv_string_value};
+
+impl IntoIterator for jv {
+    type Item = jv;
+    type IntoIter = JvIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        if unsafe { jv_get_kind(self) } == jv_kind_JV_KIND_ARRAY {
+            JvIntoIterator {
+                value: self,
+                index: 0,
+                size: unsafe { jv_array_length(jv_copy(self)) } as usize
+            }
+        } else {
+            JvIntoIterator {
+                value: self,
+                index: 0,
+                size: 0
+            }
+        }
+    }
+}
+
+pub struct JvIntoIterator {
+    value: jv,
+    index: usize,
+    size: usize
+}
+
+impl Iterator for JvIntoIterator {
+    type Item = jv;
+    fn next(&mut self) -> Option<jv> {
+
+        if self.index >= self.size {
+            return None;
+        }
+
+        let result = unsafe { jv_array_get(jv_copy(self.value), self.index as c_int) };
+        self.index += 1;
+
+        Some(result)
+    }
+}
 
 pub fn jv_from_string(input: &str) -> jv {
     unsafe {
