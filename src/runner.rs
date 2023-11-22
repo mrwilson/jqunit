@@ -4,22 +4,15 @@ mod jqunit {
         jv_array, jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump_string,
         jv_get_kind, jv_kind_JV_KIND_NULL, jv_null, jv_string, jv_string_value,
     };
-    use std::ffi::{CStr, CString};
     use crate::jq::jv::jv_kind_JV_KIND_ARRAY;
+    use std::ffi::{CStr, CString};
 
     pub struct Runner {
         state: *mut jq_state,
     }
 
-
     pub fn jv_to_string(jv: jv) -> String {
-        unsafe {
-            String::from(
-                CStr::from_ptr(jv_string_value(jv))
-                    .to_str()
-                    .expect("a"),
-            )
-        }
+        unsafe { String::from(CStr::from_ptr(jv_string_value(jv)).to_str().expect("a")) }
     }
 
     pub fn jv_from_string(input: &str) -> jv {
@@ -75,7 +68,8 @@ mod jqunit {
                     let mut functions = vec![];
 
                     for i in 0..jv_array_length(jv_copy(defined_functions)) {
-                        let mut function = jv_to_string(jv_array_get(jv_copy(defined_functions), i));
+                        let mut function =
+                            jv_to_string(jv_array_get(jv_copy(defined_functions), i));
 
                         function.truncate(function.find("/").expect("foo"));
 
@@ -96,6 +90,15 @@ mod test {
     use crate::runner::jqunit::Runner;
     use std::fs;
 
+    fn fixtures() -> String {
+        fs::canonicalize("./fixtures")
+            .expect("path exists")
+            .as_path()
+            .to_str()
+            .map(String::from)
+            .expect("as a string")
+    }
+
     #[test]
     fn should_execute_code_with_no_input() {
         assert_eq!(
@@ -107,16 +110,11 @@ mod test {
     #[test]
     fn should_load_library_and_execute_code() {
         let runner = Runner::start();
-        runner.add_library(
-            fs::canonicalize("./fixtures")
-                .expect("path exists")
-                .as_path()
-                .to_str()
-                .expect("path"),
-        );
+        runner.add_library(&fixtures());
 
         assert_eq!(
-            runner.execute_code_with_no_input("import \"simple_function\" as s; s::simple_function"),
+            runner
+                .execute_code_with_no_input("import \"simple_function\" as s; s::simple_function"),
             Some(String::from("2"))
         );
     }
@@ -124,13 +122,7 @@ mod test {
     #[test]
     fn should_load_list_of_functions_from_module() {
         let runner = Runner::start();
-        runner.add_library(
-            fs::canonicalize("./fixtures")
-                .expect("path exists")
-                .as_path()
-                .to_str()
-                .expect("path"),
-        );
+        runner.add_library(&fixtures());
 
         assert_eq!(
             runner.get_functions_for_module("simple_function"),
