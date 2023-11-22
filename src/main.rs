@@ -31,19 +31,6 @@ fn main() {
         .into_iter()
         .filter(|function| function.starts_with("should_"))
         .map(|function| runner.execute_test(&args.module, &function))
-        .map(|test_result| {
-            if test_result.pass {
-                format!(
-                    "test {}::{} ... \x1b[32mok\x1b[0m",
-                    test_result.module, test_result.name
-                )
-            } else {
-                format!(
-                    "test {}::{} ... \x1b[31mFAILED\x1b[0m\n{}",
-                    test_result.module, test_result.name, test_result.output
-                )
-            }
-        })
         .for_each(|test_result| println!("{}", test_result));
 }
 

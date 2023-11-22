@@ -2,6 +2,7 @@ pub mod runner {
     use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv_array_append, jv_invalid_get_msg, jv_null};
     use crate::jq::utils::{jv_from_string, jv_to_result, jv_to_string, remove_arity};
     use std::ffi::CString;
+    use std::fmt::{Display, Formatter};
     use std::path::PathBuf;
 
     pub struct Runner {
@@ -80,6 +81,22 @@ pub mod runner {
         pub name: String,
         pub pass: bool,
         pub output: String,
+    }
+
+    impl Display for TestResult {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            if self.pass {
+                write!(f,
+                    "test {}::{} ... \x1b[32mok\x1b[0m",
+                    self.module, self.name
+                )
+            } else {
+                write!(f,
+                    "test {}::{} ... \x1b[31mFAILED\x1b[0m\n{}",
+                       self.module, self.name, self.output
+                )
+            }
+        }
     }
 
     #[test]
