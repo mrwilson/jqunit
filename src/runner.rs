@@ -1,36 +1,14 @@
 pub mod runner {
     use crate::jq::jq::{
-        jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv,
-        jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump_string,
-        jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_INVALID,
-        jv_kind_JV_KIND_STRING, jv_null, jv_string, jv_string_value,
+        jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state,
+        jv_array_append, jv_array_get, jv_array_length, jv_copy,
+        jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_INVALID, jv_null,
     };
-    use std::ffi::{CStr, CString};
+    use std::ffi::CString;
+    use crate::jq::utils::{jv_from_string, jv_to_string};
 
     pub struct Runner {
         state: *mut jq_state,
-    }
-
-    pub fn jv_to_string(jv: jv) -> String {
-        unsafe {
-            let value = if jv_get_kind(jv) == jv_kind_JV_KIND_STRING {
-                jv
-            } else {
-                jv_dump_string(jv, 0)
-            };
-
-            String::from(CStr::from_ptr(jv_string_value(value)).to_str().expect("a"))
-        }
-    }
-
-    pub fn jv_from_string(input: &str) -> jv {
-        unsafe {
-            return jv_string(
-                CString::new(input)
-                    .expect("Invalid value passed to jv_string")
-                    .as_ptr(),
-            );
-        }
     }
 
     impl Runner {
