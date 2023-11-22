@@ -79,17 +79,16 @@ pub mod runner {
                 let defined_functions = jq_next(self.state);
 
                 if jv_get_kind(defined_functions) == jv_kind_JV_KIND_ARRAY {
-                    let mut functions = vec![];
-
-                    for i in 0..jv_array_length(jv_copy(defined_functions)) {
-                        let mut function =
-                            jv_to_string(jv_array_get(jv_copy(defined_functions), i));
-
-                        function.truncate(function.find("/").expect("foo"));
-                        functions.push(function)
-                    }
-
-                    functions
+                    (0..jv_array_length(jv_copy(defined_functions)))
+                        .into_iter()
+                        .map(|index| jv_array_get(jv_copy(defined_functions), index))
+                        .map(|value| jv_to_string(value))
+                        .map(|name| {
+                            let mut function_name = name.clone();
+                            function_name.truncate(function_name.find("/").expect("foo"));
+                            function_name
+                        })
+                        .collect::<Vec<String>>()
                 } else {
                     vec![]
                 }
