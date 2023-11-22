@@ -1,11 +1,10 @@
 pub mod runner {
     use crate::jq::jq::{
         jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state,
-        jv_array_append,
-        jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_INVALID, jv_null,
+        jv_array_append, jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_INVALID, jv_null,
     };
-    use std::ffi::CString;
     use crate::jq::utils::{jv_from_string, jv_to_string, remove_arity};
+    use std::ffi::CString;
 
     pub struct Runner {
         state: *mut jq_state,
@@ -56,7 +55,7 @@ pub mod runner {
 
                 jq_next(self.state)
                     .into_iter()
-                    .map(|value| jv_to_string(value))
+                    .map(jv_to_string)
                     .map(remove_arity)
                     .collect::<Vec<String>>()
             }
@@ -66,8 +65,18 @@ pub mod runner {
             let code = format!("include \"{}\"; {}", module, test_name);
 
             match self.execute_code_with_no_input(&code) {
-                Ok(output) => TestResult { module: String::from(module), name: String::from(test_name), pass: true, output },
-                Err(output) => TestResult { module: String::from(module), name: String::from(test_name), pass: false, output },
+                Ok(output) => TestResult {
+                    module: String::from(module),
+                    name: String::from(test_name),
+                    pass: true,
+                    output,
+                },
+                Err(output) => TestResult {
+                    module: String::from(module),
+                    name: String::from(test_name),
+                    pass: false,
+                    output,
+                },
             }
         }
     }
@@ -82,12 +91,12 @@ pub mod runner {
             .expect("as a string")
     }
 
-    #[derive(Debug,PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct TestResult {
         pub module: String,
         pub name: String,
         pub pass: bool,
-        pub output: String
+        pub output: String,
     }
 
     #[test]

@@ -1,5 +1,8 @@
+use crate::jq::jq::{
+    jv, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY,
+    jv_kind_JV_KIND_STRING, jv_string, jv_string_value,
+};
 use std::ffi::{c_int, CStr, CString};
-use crate::jq::jq::{jv, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_STRING, jv_string, jv_string_value};
 
 impl IntoIterator for jv {
     type Item = jv;
@@ -10,13 +13,13 @@ impl IntoIterator for jv {
             JvIntoIterator {
                 value: self,
                 index: 0,
-                size: unsafe { jv_array_length(jv_copy(self)) } as usize
+                size: unsafe { jv_array_length(jv_copy(self)) } as usize,
             }
         } else {
             JvIntoIterator {
                 value: self,
                 index: 0,
-                size: 0
+                size: 0,
             }
         }
     }
@@ -25,13 +28,12 @@ impl IntoIterator for jv {
 pub struct JvIntoIterator {
     value: jv,
     index: usize,
-    size: usize
+    size: usize,
 }
 
 impl Iterator for JvIntoIterator {
     type Item = jv;
     fn next(&mut self) -> Option<jv> {
-
         if self.index >= self.size {
             return None;
         }
@@ -78,7 +80,10 @@ mod test {
 
     #[test]
     fn string_values_are_reversible() {
-        assert_eq!(jv_to_string(jv_from_string("Hello, World!")), "Hello, World!")
+        assert_eq!(
+            jv_to_string(jv_from_string("Hello, World!")),
+            "Hello, World!"
+        )
     }
 
     #[test]
@@ -88,6 +93,9 @@ mod test {
 
     #[test]
     fn arities_are_removed_from_function_names() {
-       assert_eq!(remove_arity(String::from("test_function/0")), "test_function")
+        assert_eq!(
+            remove_arity(String::from("test_function/0")),
+            "test_function"
+        )
     }
 }
