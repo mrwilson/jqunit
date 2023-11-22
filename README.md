@@ -1,5 +1,7 @@
 # jqunit
 
+![Build and Test](https://github.com/mrwilson/jqunit/actions/workflows/build.yaml/badge.svg)
+
 A test framework for JQ, written in Rust, on top of libjq.
 
 ## Example
