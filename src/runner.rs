@@ -180,4 +180,20 @@ pub mod runner {
             }
         );
     }
+
+    #[test]
+    fn should_run_failing_test() {
+        let runner = Runner::start();
+        runner.add_library(&fixtures());
+
+        assert_eq!(
+            runner.execute_test("bad_module", "function_with_error"),
+            TestResult {
+                module: String::from("bad_module"),
+                name: String::from("function_with_error"),
+                pass: false,
+                output: String::from("This is a bad function")
+            }
+        );
+    }
 }

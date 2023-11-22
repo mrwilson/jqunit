@@ -1,0 +1,1 @@
+def function_with_error: error("This is a bad function");
