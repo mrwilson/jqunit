@@ -1,15 +1,31 @@
 mod jqunit {
     use std::ffi::{CStr, CString};
-    use crate::jq::jq::{jq_compile, jq_init, jq_next, jq_start, jq_state, jv_null, jv_string_value};
+    use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv, jv_array, jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_NULL, jv_null, jv_string, jv_string_value};
 
     pub struct Runner {
         state: *mut jq_state
+    }
+
+    pub fn jv_to_string(jv: jv) -> String {
+        unsafe {
+            String::from(CStr::from_ptr(jv_string_value(jv_dump_string(jv, 0))).to_str().expect("a"))
+        }
     }
 
     impl Runner {
         pub fn start() -> Runner {
             Runner {
                 state: unsafe { jq_init() }
+            }
+        }
+
+        pub fn add_library(&self, path: &str) {
+            unsafe {
+                let libs = jv_array_append(
+                    jq_get_lib_dirs(self.state),
+                    jv_string(CString::new(path).expect("path").as_ptr())
+                );
+                jq_set_attr(self.state, jv_string(CString::new("JQ_LIBRARY_PATH").expect("path").as_ptr()), libs);
             }
         }
 
@@ -34,7 +50,7 @@ mod jqunit {
 
 #[cfg(test)]
 mod test {
-
+    use std::fs;
     use crate::runner::jqunit::Runner;
 
     #[test]
@@ -42,6 +58,17 @@ mod test {
         assert_eq!(
             Runner::start().execute_code_with_no_input("\"hello\""),
             Some(String::from("hello"))
+        );
+    }
+
+    #[test]
+    fn should_load_library_and_execute_code() {
+        let runner = Runner::start();
+        runner.add_library(fs::canonicalize("./fixtures").expect("path exists").as_path().to_str().expect("path"));
+
+        assert_eq!(
+            runner.execute_code_with_no_input("include \"simple_function\"; simple_function"),
+            Some(String::from("2"))
         );
     }
 

@@ -1,0 +1,1 @@
+def simple_function: "2";
