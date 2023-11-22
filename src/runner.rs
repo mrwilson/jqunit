@@ -1,6 +1,6 @@
 pub mod runner {
     use std::error::Error;
-    use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv, jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY, jv_null, jv_string, jv_string_value};
+    use crate::jq::jq::{jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state, jv, jv_array_append, jv_array_get, jv_array_length, jv_copy, jv_dump, jv_dump_string, jv_get_kind, jv_invalid_get_msg, jv_kind_JV_KIND_ARRAY, jv_kind_JV_KIND_INVALID, jv_null, jv_string, jv_string_value};
 
     use std::ffi::{CStr, CString};
 
@@ -45,10 +45,16 @@ pub mod runner {
 
                 Ok(self.state)
                     .map(|value| jq_next(value))
-                    .map(|value| jv_string_value(value))
-                    .map(|value| CStr::from_ptr(value))
-                    .map(|cstr| cstr.to_str().ok().expect(""))
-                    .map(String::from)
+                    .and_then(|value| {
+                        if jv_get_kind(value) == jv_kind_JV_KIND_INVALID {
+                            Err(value)
+                        } else {
+                            Ok(value)
+                        }
+                    })
+                    .map(|value| jv_to_string(value))
+                    .map_err(|err| jv_invalid_get_msg(err))
+                    .map_err(|err| jv_to_string(err))
             }
         }
 
@@ -112,6 +118,18 @@ mod test {
             runner
                 .execute_code_with_no_input("import \"simple_function\" as s; s::simple_function"),
             Ok(String::from("2"))
+        );
+    }
+
+    #[test]
+    fn should_return_error_if_exits_with_error() {
+        let runner = Runner::start();
+        runner.add_library(&fixtures());
+
+        assert_eq!(
+            runner
+                .execute_code_with_no_input("error(\"Failed to run\")"),
+            Err(String::from("Failed to run"))
         );
     }
 
