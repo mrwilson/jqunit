@@ -1,5 +1,6 @@
 use clap::Parser;
 use std::path::PathBuf;
+use std::process::ExitCode;
 
 use crate::runner::{find_test_modules, Runner};
 
@@ -16,7 +17,7 @@ struct Arguments {
     module: Option<String>,
 }
 
-fn main() {
+fn main() -> ExitCode {
     let args = Arguments::parse();
 
     let runner = Runner::start();
@@ -31,6 +32,8 @@ fn main() {
             library_modules.extend(find_test_modules(library.to_path_buf()))
         });
 
+    let mut pass = true;
+
     args.module
         .map(|module| vec![module])
         .unwrap_or(library_modules)
@@ -41,6 +44,15 @@ fn main() {
                 .into_iter()
                 .filter(|function| function.starts_with("should_"))
                 .map(|function| runner.execute_test(module, &function))
-                .for_each(|test_result| println!("{}", test_result));
+                .for_each(|result| {
+                    pass &= result.pass;
+                    println!("{}", result);
+                });
         });
+
+    if pass {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
 }
