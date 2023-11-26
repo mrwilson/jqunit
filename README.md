@@ -4,6 +4,24 @@
 
 A test framework for JQ, written in Rust, on top of libjq.
 
+## What is a test?
+
+`jqunit` views a test as a function starting with `should_` in a file ending with `_test.jq`.
+The test function fails if it returns an error, and passes if it returns anything else.
+
+```jq
+def should_pass_test: 1; 
+
+def should_fail_test: error("Fails test");
+```
+
+You can implement your own `assert` until there is one in the `jq` standard build.
+
+```jq
+def assert($description; $assertion):
+    if $assertion then . else error("\($description)") end;
+```
+
 ## Example
 
 Running against Day 11 of my [advent-of-code-2021](https://github.com/mrwilson/advent-of-code-2021) repository.
@@ -27,4 +45,4 @@ test day_11_test::should_find_first_simultaneous_flash ... ok (537ms)
 ## Usage
 
 - `--libraries`: Space separated list of directories to import when running tests. Analogous to jq's `-L`
-- `--module`: Test module to execute
+- `--module`: Test module to execute. If not present, `jqunit` will traverse the directory tree and search for files with names matching `*_test`
