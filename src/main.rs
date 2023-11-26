@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-use crate::runner::runner::Runner;
+use crate::runner::runner::{find_test_modules, Runner};
 
 mod jq;
 mod runner;
@@ -13,7 +13,7 @@ struct Arguments {
     libraries: Vec<PathBuf>,
 
     #[arg(short, long)]
-    module: String,
+    module: Option<String>,
 }
 
 fn main() {
@@ -21,15 +21,26 @@ fn main() {
 
     let runner = Runner::start();
 
+    let mut library_modules = vec![];
+
     args.libraries
         .into_iter()
         .map(|path| path.canonicalize().expect("should have a valid path"))
-        .for_each(|library| runner.add_library(library));
+        .for_each(|library| {
+            runner.add_library(library.clone());
+            library_modules.extend(find_test_modules(library.to_path_buf()))
+        });
 
-    runner
-        .get_functions_for_module(&args.module)
-        .into_iter()
-        .filter(|function| function.starts_with("should_"))
-        .map(|function| runner.execute_test(&args.module, &function))
-        .for_each(|test_result| println!("{}", test_result));
+    args.module
+        .map(|module| vec![module])
+        .unwrap_or(library_modules)
+        .iter()
+        .for_each(|module| {
+            runner
+                .get_functions_for_module(module)
+                .into_iter()
+                .filter(|function| function.starts_with("should_"))
+                .map(|function| runner.execute_test(module, &function))
+                .for_each(|test_result| println!("{}", test_result));
+        });
 }
