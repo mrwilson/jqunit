@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::path::PathBuf;
 
-use crate::runner::runner::{find_test_modules, Runner};
+use crate::runner::{find_test_modules, Runner};
 
 mod jq;
 mod runner;
