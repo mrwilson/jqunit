@@ -8,6 +8,7 @@ pub mod runner {
     use std::fmt::{Display, Formatter};
     use std::path::PathBuf;
     use std::time::Instant;
+    use walkdir::WalkDir;
 
     pub struct Runner {
         state: *mut jq_state,
@@ -82,6 +83,16 @@ pub mod runner {
                 },
             }
         }
+    }
+
+    pub fn find_test_modules(path: PathBuf) -> Vec<String> {
+        WalkDir::new(path)
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+            .map(|e| e.into_path())
+            .map(|e| String::from(e.file_stem().unwrap().to_str().unwrap()))
+            .filter(|e| e.ends_with("_test"))
+            .collect()
     }
 
     #[derive(Debug, PartialEq)]
@@ -182,5 +193,12 @@ pub mod runner {
 
         assert!(!result.pass);
         assert!(result.duration > 0)
+    }
+
+    #[test]
+    fn should_discover_test_modules() {
+        let directory = std::fs::canonicalize("./fixtures").expect("loaded fixtures");
+
+        assert_eq!(find_test_modules(directory), vec!["example_test"]);
     }
 }

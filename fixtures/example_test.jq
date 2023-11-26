@@ -1,0 +1,1 @@
+def should_test_numbers_being_equal: if 1 == 1 then 1 else error("1 should equal 1") end
