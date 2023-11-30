@@ -2,6 +2,18 @@
 name = "jqunit"
 version = "0.0.0"
 edition = "2021"
+license = "MIT"
+description = "A test framework for jq, built on top of libjq."
+homepage = "https://github.com/mrwilson/jqunit"
+repository = "https://github.com/mrwilson/jqunit"
+readme = "README.md"
+keywords = [ "jq", "testing", "tdd" ]
+categories = [ "command-line-utilities", "development-tools::testing" ]
+include = [
+    "src/**/*.rs",
+    "build.rs",
+    "Cargo.toml",
+]
 
 [dependencies]
 libc = "*"
