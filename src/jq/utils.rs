@@ -1,15 +1,15 @@
 use crate::jq::jq::{
-    jv, jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_kind_JV_KIND_ARRAY,
-    jv_kind_JV_KIND_INVALID, jv_kind_JV_KIND_STRING, jv_string, jv_string_value,
+    jv_array_get, jv_array_length, jv_copy, jv_dump_string, jv_get_kind, jv_string,
+    jv_string_value, Jv, JV_KIND_ARRAY, JV_KIND_INVALID, JV_KIND_STRING,
 };
 use std::ffi::{c_int, CStr, CString};
 
-impl IntoIterator for jv {
-    type Item = jv;
+impl IntoIterator for Jv {
+    type Item = Jv;
     type IntoIter = JvIntoIterator;
 
     fn into_iter(self) -> Self::IntoIter {
-        if unsafe { jv_get_kind(self) } == jv_kind_JV_KIND_ARRAY {
+        if unsafe { jv_get_kind(self) } == JV_KIND_ARRAY {
             JvIntoIterator {
                 value: self,
                 index: 0,
@@ -26,14 +26,14 @@ impl IntoIterator for jv {
 }
 
 pub struct JvIntoIterator {
-    value: jv,
+    value: Jv,
     index: usize,
     size: usize,
 }
 
 impl Iterator for JvIntoIterator {
-    type Item = jv;
-    fn next(&mut self) -> Option<jv> {
+    type Item = Jv;
+    fn next(&mut self) -> Option<Jv> {
         if self.index >= self.size {
             return None;
         }
@@ -45,16 +45,16 @@ impl Iterator for JvIntoIterator {
     }
 }
 
-pub fn jv_from_string(input: &str) -> jv {
+pub fn jv_from_string(input: &str) -> Jv {
     unsafe {
         let as_ptr = CString::new(input).expect("Invalid value passed to jv_string");
         return jv_string(as_ptr.as_ptr());
     }
 }
 
-pub fn jv_to_string(jv: jv) -> String {
+pub fn jv_to_string(jv: Jv) -> String {
     unsafe {
-        let value = if jv_get_kind(jv) == jv_kind_JV_KIND_STRING {
+        let value = if jv_get_kind(jv) == JV_KIND_STRING {
             jv
         } else {
             jv_dump_string(jv, 0)
@@ -70,8 +70,8 @@ pub fn remove_arity(name: String) -> String {
     function_name
 }
 
-pub fn jv_to_result(value: jv) -> Result<jv, jv> {
-    if unsafe { jv_get_kind(value) } == jv_kind_JV_KIND_INVALID {
+pub fn jv_to_result(value: Jv) -> Result<Jv, Jv> {
+    if unsafe { jv_get_kind(value) } == JV_KIND_INVALID {
         Err(value)
     } else {
         Ok(value)

@@ -1,6 +1,6 @@
 use crate::jq::jq::{
-    jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jq_state,
-    jv_array_append, jv_invalid_get_msg, jv_null,
+    jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jv_array_append,
+    jv_invalid_get_msg, jv_null, JqState,
 };
 use crate::jq::utils::{jv_from_string, jv_to_result, jv_to_string, remove_arity};
 use std::ffi::CString;
@@ -10,7 +10,7 @@ use std::time::Instant;
 use walkdir::WalkDir;
 
 pub struct Runner {
-    state: *mut jq_state,
+    state: *mut JqState,
 }
 
 impl Runner {
