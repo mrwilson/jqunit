@@ -1,1 +1,1 @@
-def function_with_error: error("This is a bad function");
+def function_with_error: [range(10000)] | error("This is a bad function");

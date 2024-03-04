@@ -141,7 +141,7 @@ mod test {
         assert_eq!(
             runner
                 .execute_code_with_no_input("import \"simple_function\" as s; s::simple_function"),
-            Ok(String::from("2"))
+            Ok(String::from("4999950000"))
         );
     }
 
@@ -176,7 +176,7 @@ mod test {
 
         assert_eq!(result.module, String::from("simple_function"));
         assert_eq!(result.name, String::from("simple_function"));
-        assert_eq!(result.output, String::from("2"));
+        assert_eq!(result.output, String::from("4999950000"));
 
         assert!(result.pass);
         assert!(result.duration > 0)
@@ -194,7 +194,7 @@ mod test {
         assert_eq!(result.output, String::from("This is a bad function"));
 
         assert!(!result.pass);
-        assert!(result.duration > 0)
+        assert!(result.duration > 0);
     }
 
     #[test]
