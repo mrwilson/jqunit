@@ -2,7 +2,7 @@ use crate::jq::jq::{
     jq_compile, jq_get_lib_dirs, jq_init, jq_next, jq_set_attr, jq_start, jv_array_append,
     jv_invalid_get_msg, jv_null, JqState,
 };
-use crate::jq::utils::{jv_from_string, jv_to_result, jv_to_string, remove_arity};
+use crate::jq::utils::{jv_from_string, jv_to_result, remove_arity};
 use std::ffi::CString;
 use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
@@ -40,9 +40,9 @@ impl Runner {
             Ok(self.state)
                 .map(|value| jq_next(value))
                 .and_then(jv_to_result)
-                .map(|value| jv_to_string(value))
+                .map(|value| value.to_string())
                 .map_err(|err| jv_invalid_get_msg(err))
-                .map_err(|err| jv_to_string(err))
+                .map_err(|err| err.to_string())
         }
     }
 
@@ -55,9 +55,9 @@ impl Runner {
 
             jq_next(self.state)
                 .into_iter()
-                .map(jv_to_string)
+                .map(|function_name| function_name.to_string())
                 .map(remove_arity)
-                .collect::<Vec<String>>()
+                .collect()
         }
     }
 

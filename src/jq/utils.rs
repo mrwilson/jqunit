@@ -52,15 +52,17 @@ pub fn jv_from_string(input: &str) -> Jv {
     }
 }
 
-pub fn jv_to_string(jv: Jv) -> String {
-    unsafe {
-        let value = if jv_get_kind(jv) == JV_KIND_STRING {
-            jv
-        } else {
-            jv_dump_string(jv, 0)
-        };
+impl ToString for Jv {
+    fn to_string(&self) -> String {
+        unsafe {
+            let value = if jv_get_kind(*self) == JV_KIND_STRING {
+                *self
+            } else {
+                jv_dump_string(*self, 0)
+            };
 
-        String::from(CStr::from_ptr(jv_string_value(value)).to_str().expect("a"))
+            String::from(CStr::from_ptr(jv_string_value(value)).to_str().expect("a"))
+        }
     }
 }
 
@@ -81,19 +83,16 @@ pub fn jv_to_result(value: Jv) -> Result<Jv, Jv> {
 #[cfg(test)]
 mod test {
     use crate::jq::jq::jv_array;
-    use crate::jq::utils::{jv_from_string, jv_to_string, remove_arity};
+    use crate::jq::utils::{jv_from_string, remove_arity};
 
     #[test]
     fn string_values_are_reversible() {
-        assert_eq!(
-            jv_to_string(jv_from_string("Hello, World!")),
-            "Hello, World!"
-        )
+        assert_eq!(jv_from_string("Hello, World!").to_string(), "Hello, World!")
     }
 
     #[test]
     fn non_string_values_are_serialised() {
-        unsafe { assert_eq!(jv_to_string(jv_array()), "[]") }
+        unsafe { assert_eq!(jv_array().to_string(), "[]") }
     }
 
     #[test]
