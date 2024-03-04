@@ -16,6 +16,6 @@ include = [
 ]
 
 [dependencies]
-libc = "*"
+libc = "0.2.153"
 clap = { version = "4.4.8", features = ["derive"] }
 walkdir = "2.4.0"
