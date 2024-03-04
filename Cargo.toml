@@ -1,6 +1,6 @@
 [package]
 name = "jqunit"
-version = "0.0.0"
+version = "0.1.0-rc"
 edition = "2021"
 license = "MIT"
 description = "A test framework for jq, built on top of libjq."
