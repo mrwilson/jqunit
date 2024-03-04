@@ -5,6 +5,21 @@
 
 A test framework for JQ, written in Rust, on top of libjq.
 
+## Installing
+
+You can install `jqunit` directly from crates.io
+
+```
+cargo install jqunit@<version>
+```
+
+Or you can build it from this source
+
+```
+git clone git@github.com:mrwilson/jqunit-rs.git
+cargo install --path jqunit-rs
+```
+
 ## What is a test?
 
 `jqunit` views a test as a function starting with `should_` in a file ending with `_test.jq`.
