@@ -10,9 +10,11 @@ mod runner;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Arguments {
+    /// Libraries to import when executing tests
     #[arg(short, long, num_args = 1.., value_delimiter = ' ')]
     libraries: Vec<PathBuf>,
 
+    /// Module to execute tests within
     #[arg(short, long)]
     module: Option<String>,
 }
