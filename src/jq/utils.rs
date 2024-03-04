@@ -47,11 +47,8 @@ impl Iterator for JvIntoIterator {
 
 pub fn jv_from_string(input: &str) -> jv {
     unsafe {
-        return jv_string(
-            CString::new(input)
-                .expect("Invalid value passed to jv_string")
-                .as_ptr(),
-        );
+        let as_ptr = CString::new(input).expect("Invalid value passed to jv_string");
+        return jv_string(as_ptr.as_ptr());
     }
 }
 
